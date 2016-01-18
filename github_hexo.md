@@ -1,7 +1,7 @@
 ---
 title: GitHub+hexo 搭建个人博客
 categories: 应用
-tags: [hexo,git,markdown]
+tags: [hexo,git]
 description: GitHub+Hexo 搭建免费的个人博客，这里介绍下基本操作包括 github、hexo配置，但不包括 hexo主题设置
 
 ---

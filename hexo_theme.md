@@ -1,7 +1,7 @@
 ---
 title: hexo 配置及主题
 categories: 应用
-tags: [hexo,git,markdown]
+tags: [hexo,git]
 description: Hexo 主题及相关功能配置
 
 ---
