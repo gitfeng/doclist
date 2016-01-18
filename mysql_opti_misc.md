@@ -1,5 +1,5 @@
 ---
-title: MySQL_查询优化
+title: MySQL_查询优化-1/2
 categories: 技术
 tags: [mysql]
 description:  mysql使用过程中的一些优化注意事项,如'为查询缓存优化你的查询', '当只要一行数据时使用 LIMIT 1', '在Join表的时候使用相当类型的例，并将其索引', '千万不要 ORDER BY RAND()', '避免 SELECT *', '永远为每张表设置一个ID', '使用 ENUM 而不是 VARCHAR', '尽可能的使用 NOT NULL', '把IP地址存成 UNSIGNED INT', '固定长度的表会更快', '垂直分割', '拆分大的 DELETE 或 INSERT语句'等
