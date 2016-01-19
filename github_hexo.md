@@ -1,38 +1,36 @@
 ---
 title: GitHub+hexo 搭建个人博客
+date: 2016-01-16 19:09:01
 categories: 应用
 tags: [hexo,git]
 description: GitHub+Hexo 搭建免费的个人博客，这里介绍下基本操作包括 github、hexo配置，但不包括 hexo主题设置
 
 ---
 
-
 参考：
-
 ```html
-搭建流程http://blog.netpi.me/%E5%AE%9E%E7%94%A8/hexo/
-http://www.cnblogs.com/zhcncn/p/4097881.html
-http://moxfive.xyz/
+搭建流程 http://blog.netpi.me/%E5%AE%9E%E7%94%A8/hexo/
+        http://www.cnblogs.com/zhcncn/p/4097881.html
+        http://moxfive.xyz/
+        http://ibruce.info/2013/11/22/hexo-your-blog/
 ```
-## hexo 
+
+## hexo
 ### 安装
 #### npm 镜像服务器设置
 参考链接：https://cnodejs.org/topic/4f9904f9407edba21468f31e
 镜像使用方法（三种办法任意一种都能解决问题，建议使用第三种，将配置写死，下次用的时候配置还在）:
-
 - 通过config命令
 
 ```bash
 npm config set registry https://registry.npm.taobao.org 
 npm info underscore （如果上面配置正确这个命令会有字符串response）
 ```
-
 - 命令行指定
 
 ```
 npm --registry https://registry.npm.taobao.org info underscore 
 ```
-
 - 编辑 ~/.npmrc 加入下面内容
 
 ```
@@ -87,7 +85,7 @@ themes // 存放皮肤的地方
 解决办法：
 
 进入你刚新建好的 blog根目录 ，进入 themes/landscape/layout/_partial
-1. 找到 after-footer.ejs ,把
+- 找到 after-footer.ejs ,把
 
 ```js
 <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"> </script>
@@ -98,8 +96,7 @@ themes // 存放皮肤的地方
 ```js
 <script src="http://cdn.bootcss.com/jquery/2.1.1/jquery.min.js" > </script>
 ```
-
-2. 找到 header.ejs
+- 找到 header.ejs
 
 注释掉或者删掉 下面这句css引用
 

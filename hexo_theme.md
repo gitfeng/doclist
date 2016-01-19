@@ -1,5 +1,6 @@
 ---
 title: hexo 配置及主题
+date: 2015-01-17 11:20:00
 categories: 应用
 tags: [hexo,git]
 description: Hexo 主题及相关功能配置

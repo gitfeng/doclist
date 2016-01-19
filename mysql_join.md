@@ -6,8 +6,6 @@ description:  mysql join, 介绍各种连接的概念与区别
 
 ---
 
-[TOC]
-
 ## 连接的概念
 连接分为条件连接、等值连接和自然连接三种。
 - 条件连接就是在多个表的笛卡尔积中选取满足条件的行的连接，例如  select * from A,B where A.a > A.b  之类的有条件的查询。
@@ -20,8 +18,8 @@ Join操作的共性：第一步均为将所有参与操作的表进行了一个�
 ## 内连接与等值连接的区别：
 内连接：两个表（或连接）中某一数据项相等的连接称为内连接。等值连接一般用where字句设置条件，内连接一般用on字句设置条件，但内连接与等值连接效果是相同的。
 内连接与等值连接其实是一回事情（等效）。
-经常有人会问到select[a.id](http://a.id/),[b.name](http://b.name/)from a,b where[a.id](http://a.id/)=b.pid  与
-select[a.id](http://a.id/),[b.name](http://b.name/)from a inner join b on[a.id](http://a.id/)=b.pid   有什么区别，哪个效率更高一些。
+经常有人会问到select a.id,b.name from a,b where a.id=b.pid  与
+select a.id,b.name from a inner join b on a.id=b.pid有什么区别，哪个效率更高一些。
 实际上一回事情了。只是内连接是由SQL 1999规则定的书写方式。两个说的是一码事。
 
 ## 内连接与外连接的结果集区别：
@@ -49,7 +47,7 @@ SELECT * FROM TableA INNER JOIN TableB ON TableA.name = TableB.name
 |:----|:---|:----|:----|
 |1  |Pirate|    2   | Pirate|
 |3  |Ninja |    4   | Ninja|
-![](http://upload-images.jianshu.io/upload_images/250876-aaacb5c3721bedd6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-and.png)
 
 ### Full outer join == A || B
 SELECT * FROM TableA FULL OUTER JOIN TableB ON TableA.name = TableB.name
@@ -63,7 +61,7 @@ SELECT * FROM TableA FULL OUTER JOIN TableB ON TableA.name = TableB.name
 |null |null |      1 |   Rutabaga|
 |null |null |     3 |   Darth Vader|
 产生A和B的并集。但是需要注意的是，对于没有匹配的记录，则会以null做为值。
-![](http://upload-images.jianshu.io/upload_images/250876-032932a4450df8f0.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-or.png)
 
 ### Left outer join = A
 产生表A的完全集，而B表中匹配的则有值，没有匹配的则以null值取代。
@@ -75,7 +73,7 @@ SELECT * FROM TableA LEFT OUTER JOIN TableB ON TableA.name = TableB.name
 |2  |Monkey| null| null|
 |3  |Ninja  |    4  |  Ninja|
 |4  |Spaghetti| null |null|
-![](http://upload-images.jianshu.io/upload_images/250876-b85e825c6ef40893.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-a-all.png)
 
 ### A-B
 SELECT * FROM TableA LEFT OUTER JOIN TableB ON TableA.name = TableB.name WHERE TableB.id IS null
@@ -85,7 +83,7 @@ SELECT * FROM TableA LEFT OUTER JOIN TableB ON TableA.name = TableB.name WHERE 
 |2  |Monkey |null |null|
 |4  |Spaghetti |null |null|
 产生在A表中有而在B表中没有的集合。
-![](http://upload-images.jianshu.io/upload_images/250876-4d140ff92721f7f6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-a-sub-b.png)
 
 ### A表和B表都没有出现的数据集
 SELECT * FROM TableA FULL OUTER JOIN TableB ON TableA.name = TableB.name WHERE TableA.id IS null OR TableB.id IS null
@@ -97,9 +95,9 @@ SELECT * FROM TableA FULL OUTER JOIN TableB ON TableA.name = TableB.name WHERE 
 |null |null       |1    |Rutabaga|
 |null |null       |3    |Darth Vader|
 产生A表和B表都没有出现的数据集。
-![](http://upload-images.jianshu.io/upload_images/250876-fda1fc31dcbd3650.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-ab.png)
 
 还需要注意的是我们还有一个是“交差集” cross join, 这种Join没有办法用文式图表示，因为其就是把表A和表B的数据进行一个N*M的组合，即笛卡尔积。表达式如下：
 SELECT * FROM TableA **CROSS JOIN** TableB
 这个笛卡尔乘积会产生 4 x 4 = 16 条记录，一般来说，我们很少用到这个语法。但是我们得小心，如果不是使用嵌套的select语句，一般系统都会产生笛卡尔乘积然再做过滤。这是对于性能来说是非常危险的，尤其是表很大的时候。
-![](http://upload-images.jianshu.io/upload_images/250876-0dde6d19d7191fdf.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+![](http://7xq67w.com1.z0.glb.clouddn.com/mysql%2Fmysql-join-total.jpg)
