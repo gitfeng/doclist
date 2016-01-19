@@ -56,3 +56,98 @@ MVCC, 前面有提到。MySQL的大多数事务型存储引擎的实现都不是
 MVCC 的实现，是通过保存数据在某个时间点的快照实现的。即不管需要执行多长时间，每个事务看到的数据都是一致的。根据事务开始的时间不同，每个事务对同一张表，同一时刻看到的数据可能是不一样的。
 
 InnoDb 的 MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了创建时间，一个保存行的过期时间（或删除时间）。当然存储的并不是实际的时间值，而是系统版本号。每开始一个新的事务，系统版本号都会自动增加。
+
+## 锁的说明
+
+### 行级锁
+行级锁是针对索引生效的，并非存储数据。每个B+Tree上的行锁，也可以理解为每个Index上的行锁。
+
+- ==操作一行记录时，有可能会加多个行锁在不同的B+Tree上。==
+- ==只有通过索引条件检索数据，InnoDB才使用行级锁，否则，InnoDB将使用表锁！==
+
+以下实例参考：http://book.51cto.com/art/200803/68127.htm
+1） 在不通过索引条件查询的时候，InnoDB确实使用的是表锁，而不是行锁。
+
+```bash
+mysql> create table tab_no_index(id int,name varchar(10)) engine=innodb;
+Query OK, 0 rows affected (0.15 sec)
+mysql> insert into tab_no_index values(1,'1'),(2,'2'),(3,'3'),(4,'4');
+Query OK, 4 rows affected (0.00 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+```
+
+如在上表执行
+
+```
+select * from tab_no_index where id = 1 for update; 
+```
+会产生表锁。
+
+
+2） 创建`tab_with_index`表，id字段有普通索引
+
+```bash
+mysql> create table tab_with_index(id int,name varchar(10)) engine=innodb;
+Query OK, 0 rows affected (0.15 sec)
+mysql> alter table tab_with_index add index id(id);
+Query OK, 4 rows affected (0.24 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+```
+
+在上表执行
+
+```sql
+select * from tab_no_index where id = 1 for update; 
+```
+产生行锁。
+
+3） 由于MySQL的行锁是针对索引加的锁，不是针对记录加的锁，所以虽然是访问不同行的记录，但是如果是使用相同的索引键，是会出现锁冲突的。应用设计的时候要注意这一点。
+
+```bash
+mysql> select * from tab_with_index where id = 1 and name = '1' for update;
+```
+
+```bash
+mysql> select * from tab_with_index where id = 1 and name = '4' for update;
+```
+上述两条 sql 虽然不是操作同一条记录，但是由于 index(id=1)产生了锁，因此还是会出现锁等待情况。
+
+4） 当表有多个索引的时候，不同的事务可以使用不同的索引锁定不同的行，另外，不论是使用主键索引、唯一索引或普通索引，InnoDB都会使用行锁来对数据加锁。可以理解为所有索引树都会加锁。
+
+```bash
+mysql> alter table tab_with_index add index name(name);
+Query OK, 5 rows affected (0.23 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+```
+
+```bash
+mysql> select * from tab_with_index where id = 1 for update;
++------+------+
+| id   | name |
++------+------+
+| 1    | 1    |
+| 1    | 4    |
++------+------+
+2 rows in set (0.00 sec)
+```
+
+```bash
+#Session_2使用name的索引访问记录，因为记录没有被索引，所以可以获得锁
+mysql> select * from tab_with_index where name = '2' for update;
++------+------+
+| id   | name |
++------+------+
+| 2    | 2    |
++------+------+
+1 row in set (0.00 sec)
+#由于访问的记录已经被session_1锁定，所以等待获得锁
+mysql> select * from tab_with_index where name = '4' for update;
+```
+
+5）即便在条件中使用了索引字段，但是否使用索引来检索数据是由MySQL通过判断不同执行计划的代价来决定的，如果MySQL认为全表扫描效率更高，比如对一些很小的表，它就不会使用索引，这种情况下InnoDB将使用表锁，而不是行锁。因此，在分析锁冲突时，别忘了检查SQL的执行计划，以确认是否真正使用了索引。
+
+6）检索值的数据类型与索引字段不同，虽然MySQL能够进行数据类型转换，但却不会使用索引，从而导致InnoDB使用表锁。
+
+### select for update
+mysql中使用select for update的必须针对InnoDb，并且是在事务中，才能起作用。select的条件不一样，采用的是行级锁还是表级锁也不一样。由于 InnoDB 预设是 Row-Level Lock，所以只有「明确」的指定主键，MySQL 才会执行 Row lock (只锁住被选取的资料例) ，否则 MySQL 将会执行 Table Lock (将整个资料表单给锁住)。举个例子:假设有个表单 products ，裡面有 id 跟 name 二个栏位，id 是主键。- 例1 (明确指定主键，并且有此条记录，row lock):SELECT * FROM products WHERE id='3' FOR UPDATE;- 例2 (明确指定主键，若查无此条记录，无 lock):SELECT * FROM products WHERE id='-1' FOR UPDATE;- 例3 (无主键，table lock):SELECT * FROM products WHERE name='Mouse' FOR UPDATE;- 例4 (主键不明确，table lock):SELECT * FROM products WHERE id<>'3' FOR UPDATE;- 例5 (主键不明确，table lock):SELECT * FROM products WHERE id LIKE '3' FOR UPDATE;
+
