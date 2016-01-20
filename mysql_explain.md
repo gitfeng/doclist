@@ -1,5 +1,6 @@
 ---
 title: MySQL_explain 的使用
+date: 2016-01-17 14:41:00
 categories: 技术
 tags: [mysql]
 description:  介绍 mysql-explain 命令的使用

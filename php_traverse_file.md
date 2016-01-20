@@ -1,5 +1,6 @@
 ---
 title: php_遍历文件内容
+date: 2016-01-17 15:41:00
 categories: 技术
 tags: [php]
 description: php 遍历文件内容，然后可执行其他任务，脚本备份

@@ -1,5 +1,6 @@
 ---
 title: MySQL_写入优化
+date: 2016-01-17 15:31:00
 categories: 技术
 tags: [mysql]
 description:  索引、提交频率对InnoDB表写入速度的影响，了解有哪些需要注意的

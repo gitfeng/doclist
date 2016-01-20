@@ -1,5 +1,6 @@
 ---
 title: MySQL_并发控制
+date: 2016-01-17 15:21:00
 categories: 技术
 tags: [mysql]
 description:  mysql并发控制，包括锁、事务、隔离、死锁等概念的介绍，主要参考《MySQL 高性能优化》

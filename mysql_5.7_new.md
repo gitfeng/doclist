@@ -1,5 +1,6 @@
 ---
 title: MySQL_5.7部分新特性
+date: 2016-01-17 14:21:00
 categories: 技术
 tags: [mysql]
 description:  mysql 5.7中一些有意思的新特性

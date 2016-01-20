@@ -1,5 +1,6 @@
 ---
 title: 常用 chrome 插件
+date: 2016-01-17 12:12:00
 categories: 应用
 tags: [chrome,tools]
 description: 个人常用 chrome 插件

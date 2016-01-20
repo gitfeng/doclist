@@ -1,5 +1,6 @@
 ---
 title: MySQL_JOIN
+date: 2016-01-17 15:01:00
 categories: 技术
 tags: [mysql]
 description:  mysql join, 介绍各种连接的概念与区别

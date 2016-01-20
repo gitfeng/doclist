@@ -1,5 +1,6 @@
 ---
 title: MySQL_存储优化-InnoDB表BLOB列
+date: 2016-01-17 15:21:00
 categories: 技术
 tags: [mysql]
 description: 优化InnoDB表BLOB列的存储效率
