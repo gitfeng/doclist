@@ -150,5 +150,18 @@ mysql> select * from tab_with_index where name = '4' for update;
 6）检索值的数据类型与索引字段不同，虽然MySQL能够进行数据类型转换，但却不会使用索引，从而导致InnoDB使用表锁。
 
 ### select for update
-mysql中使用select for update的必须针对InnoDb，并且是在事务中，才能起作用。select的条件不一样，采用的是行级锁还是表级锁也不一样。由于 InnoDB 预设是 Row-Level Lock，所以只有「明确」的指定主键，MySQL 才会执行 Row lock (只锁住被选取的资料例) ，否则 MySQL 将会执行 Table Lock (将整个资料表单给锁住)。举个例子:假设有个表单 products ，裡面有 id 跟 name 二个栏位，id 是主键。- 例1 (明确指定主键，并且有此条记录，row lock):SELECT * FROM products WHERE id='3' FOR UPDATE;- 例2 (明确指定主键，若查无此条记录，无 lock):SELECT * FROM products WHERE id='-1' FOR UPDATE;- 例3 (无主键，table lock):SELECT * FROM products WHERE name='Mouse' FOR UPDATE;- 例4 (主键不明确，table lock):SELECT * FROM products WHERE id<>'3' FOR UPDATE;- 例5 (主键不明确，table lock):SELECT * FROM products WHERE id LIKE '3' FOR UPDATE;
+mysql中使用select for update的必须针对InnoDb，并且是在事务中，才能起作用。
+select的条件不一样，采用的是行级锁还是表级锁也不一样。
+由于 InnoDB 预设是 Row-Level Lock，所以只有「明确」的指定主键，MySQL 才会执行 Row lock (只锁住被选取的资料例) ，否则 MySQL 将会执行 Table Lock (将整个资料表单给锁住)。举个例子:
+假设有个表单 products ，裡面有 id 跟 name 二个栏位，id 是主键。
+- 例1 (明确指定主键，并且有此条记录，row lock):
+    SELECT * FROM products WHERE id='3' FOR UPDATE;
+- 例2 (明确指定主键，若查无此条记录，无 lock):
+    SELECT * FROM products WHERE id='-1' FOR UPDATE;
+- 例3 (无主键，table lock):
+    SELECT * FROM products WHERE name='Mouse' FOR UPDATE;
+- 例4 (主键不明确，table lock):
+    SELECT * FROM products WHERE id<>'3' FOR UPDATE;
+- 例5 (主键不明确，table lock):
+    SELECT * FROM products WHERE id LIKE '3' FOR UPDATE;
 
