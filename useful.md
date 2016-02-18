@@ -14,6 +14,9 @@ description: 有用 url 存档
 - mysqlpub [http://www.mysqlpub.com/](http://www.mysqlpub.com/)
 - mysql 中文参考手册 [http://www.mysqlpub.com/onlinemanual/doc/refman/5.1/zh/index.html](http://www.mysqlpub.com/onlinemanual/doc/refman/5.1/zh/index.html)
 
+## 算法
+- acm 之家[http://www.acmerblog.com/]
+
 ## 源码学习
 
 - nginx
