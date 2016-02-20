@@ -1,13 +1,13 @@
 ---
-title:  http 协议
+title:  HTTP 协议
 categories: 技术
-date: 2016-01-17 16:20:01
+date: 2016-02-20 16:20:01
 tags: [http]
-description: http协议介绍，http header字段说明，http 状态码说明，http 1.1升级介绍 
+description: http协议介绍，http header字段说明，http 状态码说明
 
 ---
 
-## http协议介绍
+## HTTP 协议介绍
 
 HTTP（HyperText Transport Protocol）是超文本传输协议的缩写，它用于传送WWW方式的数据，关于HTTP协议的详细内容请参考RFC2616。HTTP协议采用了请求/响应模型。客户端向服务器发送一个请求，请求头包含请求的方法、URL、协议版本、以及包含请求修饰符、客户信息和内容的类似于MIME的消息结构。服务器以一个状态行作为响应，响应的内容包括消息协议的版本，成功或者错误编码加上包含服务器信息、实体元信息以及可能的实体内容。
 通常HTTP消息包括客户机向服务器的请求消息和服务器向客户机的响应消息。这两种类型的消息由一个起始行，一个或者多个头域，一个指示头域结束的空行和可选的消息体组成。HTTP的头域包括通用头，请求头，响应头和实体头四个部分。每个头域由一个域名，冒号（:）和域值三部分组成。域名是大小写无关的，域值前可以添加任何数量的空格符，头域可以被扩展为多行，在每行开始处，使用至少一个空格或制表符。
@@ -17,15 +17,15 @@ HTTP（HyperText Transport Protocol）是超文本传输协议的缩写，它用
 
 1. Cache-Control头域
 Cache-Control指定请求和响应遵循的缓存机制。在请求消息或响应消息中设置Cache-Control并不会修改另一个消息处理过程中的缓存处理过程。请求时的缓存指令包括no-cache、no-store、max-age、max-stale、min-fresh、only-if-cached，响应消息中的指令包括public、private、no-cache、no-store、no-transform、must-revalidate、proxy-revalidate、max-age。各个消息中的指令含义如下：
-- Public指示响应可被任何缓存区缓存。
-- Private指示对于单个用户的整个或部分响应消息，不能被共享缓存处理。这允许服务器仅仅描述当用户的部分响应消息，此响应消息对于其他用户的请求无效。
-- no-cache指示请求或响应消息不能缓存
-- no-store用于防止重要的信息被无意的发布。在请求消息中发送将使得请求和响应消息都不使用缓存。
-- max-age指示客户机可以接收生存期不大于指定时间（以秒为单位）的响应。
-- min-fresh指示客户机可以接收响应时间小于当前时间加上指定时间的响应。
-- max-stale指示客户机可以接收超出超时期间的响应消息。如果指定max-stale消息的值，那么客户机可以接收超出超时期指定值之内的响应消息。
+	- Public指示响应可被任何缓存区缓存。
+	- Private指示对于单个用户的整个或部分响应消息，不能被共享缓存处理。这允许服务器仅仅描述当用户的部分响应消息，此响应消息对于其他用户的请求无效。
+	- no-cache指示请求或响应消息不能缓存
+	- no-store用于防止重要的信息被无意的发布。在请求消息中发送将使得请求和响应消息都不使用缓存。
+	- max-age指示客户机可以接收生存期不大于指定时间（以秒为单位）的响应。
+	- min-fresh指示客户机可以接收响应时间小于当前时间加上指定时间的响应。
+	- max-stale指示客户机可以接收超出超时期间的响应消息。如果指定max-stale消息的值，那么客户机可以接收超出超时期指定值之内的响应消息。
 
-2. HTTP Keep-Alive
+2. HTTP connection: Keep-Alive
 Keep-Alive功能使客户端到服务器端的连接持续有效，当出现对服务器的后继请求时，Keep-Alive功能避免了建立或者重新建立连接。市场上的大部分Web服务器，包括iPlanet、IIS和Apache，都支持HTTP Keep-Alive。对于提供静态内容的网站来说，这个功能通常很有用。但是，对于负担较重的网站来说，这里存在另外一个问题：虽然为客户保留打开的连接有一定的好处，但它同样影响了性能，因为在处理暂停期间，本来可以释放的资源仍旧被占用。当Web服务器和应用服务器在同一台机器上运行时，Keep-Alive功能对资源利用的影响尤其突出。
 KeepAliveTime 值控制 TCP/IP 尝试验证空闲连接是否完好的频率。如果这段时间内没有活动，则会发送保持活动信号。如果网络工作正常，而且接收方是活动的，它就会响应。如果需要对丢失接收方敏感，换句话说，需要更快地发现丢失了接收方，请考虑减小这个值。如果长期不活动的空闲连接出现次数较多，而丢失接收方的情况出现较少，您可能会要提高该值以减少开销。缺省情况下，如果空闲连接 7200000 毫秒（2 小时）内没有活动，Windows 就发送保持活动的消息。通常，1800000 毫秒是首选值，从而一半的已关闭连接会在 30 分钟内被检测到。 KeepAliveInterval 值定义了如果未从接收方收到保持活动消息的响应，TCP/IP 重复发送保持活动信号的频率。当连续发送保持活动信号、但未收到响应的次数超出 TcpMaxDataRetransmissions 的值时，会放弃该连接。如果期望较长的响应时间，您可能需要提高该值以减少开销。如果需要减少花在验证接收方是否已丢失上的时间，请考虑减小该值或 TcpMaxDataRetransmissions 值。缺省情况下，在未收到响应而重新发送保持活动的消息之前，Windows 会等待 1000 毫秒（1 秒）。 KeepAliveTime 根据你的需要设置就行，比如10分钟，注意要转换成MS。 XXX代表这个间隔值得大小。
 
@@ -122,23 +122,22 @@ Last-modified实体头指定服务器上保存内容的最后修订时间。
 ### 3xx:重定向
 
 | 消息 | 描述 |
-| ---  | -- |
-| 300 Multiple Choices |
-多重选择。链接列表。用户可以选择某链接到达目的地。最多允许五个地址。|
+|---|--|
+| 300 Multiple Choices |多重选择。链接列表。用户可以选择某链接到达目的地。最多允许五个地址。|
 |301 Moved Permanently|所请求的页面已经转移至新的url。|
 |302 Found|所请求的页面已经临时转移至新的url。|
 |303 See Other|所请求的页面可在别的url下被找到。|
-|304 Not Modified|未按预期修改文档。客户端有缓冲的文档并发出了一个条件性的请求（一般是提供If-Modified-Since头表示客户只想比指定日期更新的文档）。服务器告诉客户，原来缓冲的文档还可以继续使用。|
+|304 Not Modified|未按预期修改文档。客户端有缓冲的文档并发出了一个条件性的请求<br />（一般是提供If-Modified-Since头表示客户只想比指定日期更新的文档）。<br />服务器告诉客户，原来缓冲的文档还可以继续使用。|
 |305 Use Proxy|客户请求的文档应该通过Location头所指明的代理服务器提取。|
 |306 Unused|此代码被用于前一版本。目前已不再使用，但是代码依然被保留。|
 |307 Temporary Redirect|被请求的页面已经临时移至新的url。|
 
 ### 4xx:客户端错误
+
 | 消息 | 描述 |
 | ---  | -- |
 |400 Bad Request|服务器未能理解请求。|
-|401 Unauthorized|
-被请求的页面需要用户名和密码。|
+|401 Unauthorized|被请求的页面需要用户名和密码。|
 |401.1|登录失败。|
 |401.2|服务器配置导致登录失败。|
 |401.3|由于 ACL 对资源的限制而未获得授权。|
@@ -191,33 +190,30 @@ Last-modified实体头指定服务器上保存内容的最后修订时间。
 
 | 消息 | 描述 |
 | ---  | -- |
+|500 Internal Server Error |请求未完成。服务器遇到不可预知的情况。 |
+|500.12 |应用程序正忙于在 Web 服务器上重新启动。 |
+|500.13|Web 服务器太忙。|
+|500.15|不允许直接请求 Global.asa。|
+|500.16|UNC 授权凭据不正确。这个错误代码为 IIS 6.0 所专用。|
+|500.18|URL 授权存储不能打开。这个错误代码为 IIS 6.0 所专用。|
+|500.100|内部 ASP 错误。|
+|501 Not Implemented|请求未完成。服务器不支持所请求的功能。|
+|502 Bad Gateway|请求未完成。服务器从上游服务器收到一个无效的响应。|
+|502.1|CGI 应用程序超时。·|
+|502.2|CGI 应用程序出错。|
+|503 Service Unavailable|请求未完成。服务器临时过载或当机。|
+|504 Gateway Timeout|网关超时。|
+|505 HTTP Version Not Supported|服务器不支持请求中指明的HTTP协议版本。|
 
-500 Internal Server Error
-请求未完成。服务器遇到不可预知的情况。
-500.12
-应用程序正忙于在 Web 服务器上重新启动。
-500.13
-Web 服务器太忙。
-500.15
-不允许直接请求 Global.asa。
-500.16
-UNC 授权凭据不正确。这个错误代码为 IIS 6.0 所专用。
-500.18
-URL 授权存储不能打开。这个错误代码为 IIS 6.0 所专用。
-500.100
-内部 ASP 错误。
-501 Not Implemented
-请求未完成。服务器不支持所请求的功能。
-502 Bad Gateway
-请求未完成。服务器从上游服务器收到一个无效的响应。
-502.1
-CGI 应用程序超时。　·
-502.2
-CGI 应用程序出错。
-503 Service Unavailable
-请求未完成。服务器临时过载或当机。
-504 Gateway Timeout
-网关超时。
-505 HTTP Version Not Supported
-服务器不支持请求中指明的HTTP协议版本。
+## 参考文档
 
+原文英文版
+RFC 1945 - Hypertext Transfer Protocol -- HTTP/1.0
+http://www.w3.org/Protocols/rfc1945/rfc1945
+http://www.faqs.org/rfcs/rfc1945.html
+RFC 2616 - Hypertext Transfer Protocol -- HTTP/1.1
+http://www.w3.org/Protocols/rfc2616/rfc2616
+http://www.w3.org/Protocols/rfc2616/rfc2616.html
+http://www.faqs.org/rfcs/rfc2616.html
+RFC 1945 - Hypertext Transfer Protocol -- HTTP/1.0 中文版
+http://man.chinaunix.net/develop/rfc/RFC1945.txt
