@@ -289,3 +289,9 @@ npm install hexo-generator-sitemap
 ### 图片存储服务
 
 [七牛](http://www.qiniu.com/pricing) 免费体验用户每月1G流量
+
+## gitcafe
+
+ref: http://ppting.me/2015/02/08/gitcafe/#通过DNSPOD分流
+
+dns解析：207.226.141.135

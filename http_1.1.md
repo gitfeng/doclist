@@ -1,7 +1,7 @@
 ---
 title:  HTTP 1.1 升级说明
 categories: 技术
-date: 2016-01-17 16:20:01
+date: 2016-02-20 16:20:01
 tags: [http]
 description: http 1.1升级介绍, web 缓存机制解释，断点续传、片段下载实现方法
 
