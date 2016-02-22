@@ -17,6 +17,9 @@ description: 有用 url 存档
 ## 算法
 - acm 之家[http://www.acmerblog.com/]
 
+## nginx
+- [运维与架构 nginx.cn](http://www.nginx.cn/)
+
 ## 源码学习
 
 - nginx
