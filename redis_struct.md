@@ -8,6 +8,7 @@ description:  本章主要介绍 redis 的关键数据结构的设计与实现�
 ---
 
 ref: http://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html
+ref: 
 
 ## redis 字符串 - sds
 
@@ -215,7 +216,7 @@ typedef struct dict {
  * 而不对字典进行修改。
  */
 typedef struct dictIterator {
-        
+
     // 被迭代的字典
     dict *d;
 
@@ -234,4 +235,4 @@ typedef struct dictIterator {
     long long fingerprint; /* unsafe iterator fingerprint for misuse detection */
 } dictIterator;
 
-````
+```
