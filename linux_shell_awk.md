@@ -72,6 +72,65 @@ web03[192.168.2.102]: httpd ok
 
 ## 数组应用
 
+### 数组索引（下标）可以是数字和字符串
+
+**数组下标是从1开始，与C数组不一样。**
+
+读取数组的值
+```
+ { for(item in array) {print array[item]}; } #输出的顺序是随机的 
+ { for(i=1;i<=length(array);i++) {print array[i]}; } #Len是数组的长度
+```
+
+### 判断键值存在以及删除键值
+
+错误的判断方法 - 坑：
+
+```sh
+$ awk 'BEGIN{tB["a"]="a1";tB["b"]="b1";if(tB["c"]!="1"){print "no found";};for(k in tB){print k,tB[k];}}'
+no found
+a a1
+b b1
+c
+```
+以上出现奇怪问题，tB[“c”]没有定义，但是循环时候，发现已经存在该键值，它的值为空，这里需要注意，awk数组是关联数组，只要通过数组引用它的key，就会自动创建改序列。
+
+正确判断方法： 
+
+```sh
+$ awk 'BEGIN{tB["a"]="a1";tB["b"]="b1";if( "c" in tB){print "ok";};for(k in tB){print k,tB[k];}}'
+a a1
+b b1
+```
+
+if(key in array)通过这种方法判断数组中是否包含key键值。
+
+### 二维数组
+
+
+## 内置函数
+awk内置函数，主要分以下3种类似：算数函数、字符串函数、其它一般函数、时间函数。
+
+### 算数函数
+
+| 格式 | 描述 |
+|----|----|
+| atan2(y, x)|返回 y/x 的反正切。|
+| cos(x) | 返回 x 的余弦；x 是弧度。|
+| sin(x) | 返回 x 的正弦；x 是弧度。|
+| exp(x) | 返回 x 幂函数。| 
+| log(x) | 返回 x 的自然对数。|
+| sqrt(x) | 返回 x 平方根。|
+| int(x) | 返回 x 的截断至整数的值。|
+| rand() | 返回任意数字 n，其中 0 <= n < 1。|
+| srand([expr]) | 将 rand 函数的种子值设置为 Expr 参数的值，或如果省略 Expr 参数则使用某天的时间。返回先前的种子值。 |
+
+### 字符串函数
+
+### 一般函数
+
+### 时间函数
+
 ## 案例
 
 ### 输出最后一列
@@ -101,6 +160,11 @@ $ awk -F'[:;]' '{print $1,$3,$6}' /etc/passwd
 ```
 
 ### 去重计数
+
+```sh
+$ awk '{a[$2]++}END{for(i in a) print i,a[i]}' | sort -
+```
+
 ### 文件合并
 
 ```
@@ -111,18 +175,18 @@ $ awk -F'[:;]' '{print $1,$3,$6}' /etc/passwd
 4 ddddd
 5 eeeee
 🍺 /Users/baidu/work/tmp ]$cat tmp2.txt
-11 2aaaaa
-3 ccccc
-2 bbbbb
-14 2ddddd
-15 2eeeee
+11 test2 2aaaaa
+3 test2 2ccccc
+2 test2 2bbbbb
+14 test2 2ddddd
+15 test2 2eeeee
 🍺 /Users/baidu/work/tmp ]$awk '{if(NR==FNR){a[$1]=$2}else{a[$1]=a[$1]" "$0}}END{for(i in a)print i,a[i];}' tmp.txt tmp2.txt
- 2 bbbbb
- 3 ccccc
+ 2 test2 2bbbbb
+ 3 test2 2ccccc
 4 ddddd
 5 eeeee
-11  11 2aaaaa
-14  14 2ddddd
-15  15 2eeeee
+11  11 test2 2aaaaa
+14  14 test2 2ddddd
+15  15 test2 2eeeee
 1 aaaaa
 ```
