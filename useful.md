@@ -26,3 +26,6 @@ description: 有用 url 存档
 - redis
 - php
 - [值得关注学习的 iOS 开源项目](https://www.zhihu.com/question/22914651)
+
+## linux 命令
+- linux命令大全 [http://man.linuxde.net/awk](http://man.linuxde.net/awk)
