@@ -9,6 +9,10 @@ description:  较合理的 Redis 源码阅读顺序，希望可以给对 Redis �
 
 ref: http://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html
 
+ref: http://redisdoc.com/
+
+ref: http://redisbook.com/
+
 ## 第1步：阅读数据结构实现
 刚开始阅读 Redis 源码的时候，最好从数据结构的相关文件开始读起，因为这些文件和 Redis 中的其他部分耦合最少，并且这些文件所实现的数据结构在大部分算法书上都可以了解到，所以从这些文件开始读是最轻松的、难度也是最低的。
 
@@ -125,4 +129,3 @@ Redis 的设计非常简洁、优美、精巧和高效，任何人只要愿意�
 
 黄健宏（huangz）
 2014.7.28
-
