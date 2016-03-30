@@ -8,7 +8,7 @@ description:  本章主要介绍 redis 的关键数据结构的设计与实现�
 ---
 
 ref: http://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html
-ref: 
+
 
 ## redis 字符串 - sds
 
@@ -181,6 +181,7 @@ typedef struct dictht {
 
 /*
  * 字典
+ * 一般情况下，字典只使用 ht[0] 哈希表，ht[1] 哈希表只会在对 ht[0] 哈希表进行 rehash时使用。
  */
 typedef struct dict {
 
@@ -236,3 +237,80 @@ typedef struct dictIterator {
 } dictIterator;
 
 ```
+
+### 哈希算法
+
+```c
+//使用字典设置的哈希函数，计算键 key 的哈希值
+hash = dict->type->hashFunction(key);
+//使用哈希表的 sizemask 属性和哈希值，计算出索引值
+//根据不同场景，ht[x] 可能是 ht[0] 或 ht[1]
+index = hash & dict->ht[x]sizemask;
+```
+
+当字典被用作数据库的底层实现，或者哈希键的底层实现时，Redis使用 MurmurHash2算法来计算键的哈希值，这种算法的有点在于，即使输入的键是有规律的，算法仍能给出一个很好的随机分布，并且算法的计算速度也非常快。算法参考 https://github.com/aappleby/smhasher
+
+```c
+/* MurmurHash2, by Austin Appleby
+ * Note - This code makes a few assumptions about how your machine behaves -
+ * 1. We can read a 4-byte value from any address without crashing
+ * 2. sizeof(int) == 4
+ *
+ * And it has a few limitations -
+ *
+ * 1. It will not work incrementally.
+ * 2. It will not produce the same results on little-endian and big-endian
+ *    machines.
+ */
+unsigned int dictGenHashFunction(const void *key, int len) {
+    /* 'm' and 'r' are mixing constants generated offline.
+     They're not really 'magic', they just happen to work well.  */
+    uint32_t seed = dict_hash_function_seed;
+    const uint32_t m = 0x5bd1e995;
+    const int r = 24;
+
+    /* Initialize the hash to a 'random' value */
+    uint32_t h = seed ^ len;
+
+    /* Mix 4 bytes at a time into the hash */
+    const unsigned char *data = (const unsigned char *)key;
+
+    while(len >= 4) {
+        uint32_t k = *(uint32_t*)data;
+
+        k *= m;
+        k ^= k >> r;
+        k *= m;
+
+        h *= m;
+        h ^= k;
+
+        data += 4;
+        len -= 4;
+    }
+
+    /* Handle the last few bytes of the input array  */
+    switch(len) {
+    case 3: h ^= data[2] << 16;
+    case 2: h ^= data[1] << 8;
+    case 1: h ^= data[0]; h *= m;
+    };
+
+    /* Do a few final mixes of the hash to ensure the last few
+     * bytes are well-incorporated. */
+    h ^= h >> 13;
+    h *= m;
+    h ^= h >> 15;
+
+    return (unsigned int)h;
+}
+```
+
+### 哈希冲突解决
+
+链地址法， dictEntry->next
+
+### rehash
+
+随着操作的执行，哈希表保存的键值对
+
