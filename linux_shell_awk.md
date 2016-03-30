@@ -1,6 +1,6 @@
 ---
 title: Linux_命令-awk
-date: 2016-01-17 15:31:00
+date: 2016-03-29 15:31:00
 categories: 技术
 tags: [linux]
 description: awk - 操作详细说明
@@ -45,7 +45,7 @@ pattern语句块中的通用命令是最重要的部分，它也是可选的。�
 
 ### 高级操作 - next
 
-在循环逐行匹配，如果遇到next，就会跳过当前行，直接忽略下面语句。而进行下一行匹配。net语句一般用于多行合并：
+在循环逐行匹配，如果遇到next，就会跳过当前行，直接忽略下面语句。而进行下一行匹配。next语句一般用于多行合并：
 
 ```sh
 $ cat text.txt
@@ -139,7 +139,7 @@ awk内置函数，主要分以下3种类似：算数函数、字符串函数、�
 $ cat tmp.txt | awk '{print $NF}'
 ```
 
-### 统计某行平均值
+### 统计第一列平均值
 
 ```sh
 $ awk '{sum+=$1}END{print sum/NR}' test.txt
@@ -162,25 +162,27 @@ $ awk -F'[:;]' '{print $1,$3,$6}' /etc/passwd
 ### 去重计数
 
 ```sh
-$ awk '{a[$2]++}END{for(i in a) print i,a[i]}' | sort -
+$ awk '{a[$2]++}END{for(i in a) print i,a[i]}' | sort - nkr 1
 ```
 
 ### 文件合并
 
+ps: 这个问题没有解决, 这里举例是数组操作
+
 ```
-🍺 /Users/baidu/work/tmp ]$cat tmp.txt
+🍺 /Users/work/tmp ]$cat tmp.txt
 1 aaaaa
 2 bbbbb
 3 ccccc
 4 ddddd
 5 eeeee
-🍺 /Users/baidu/work/tmp ]$cat tmp2.txt
+🍺 /Users/work/tmp ]$cat tmp2.txt
 11 test2 2aaaaa
 3 test2 2ccccc
 2 test2 2bbbbb
 14 test2 2ddddd
 15 test2 2eeeee
-🍺 /Users/baidu/work/tmp ]$awk '{if(NR==FNR){a[$1]=$2}else{a[$1]=a[$1]" "$0}}END{for(i in a)print i,a[i];}' tmp.txt tmp2.txt
+🍺 /Users/work/tmp ]$awk '{if(NR==FNR){a[$1]=$2}else{a[$1]=a[$1]" "$0}}END{for(i in a)print i,a[i];}' tmp.txt tmp2.txt
  2 test2 2bbbbb
  3 test2 2ccccc
 4 ddddd
