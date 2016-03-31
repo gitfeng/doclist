@@ -47,6 +47,16 @@ static inline size_t sdslen(const sds s) {
 }
 ```
 
+### 与 C string 比较
+
+| C 字符串	| SDS |
+|------|-----|
+|获取字符串长度的复杂度为 O(N) 。|	获取字符串长度的复杂度为 O(1) 。|
+| API是不安全的，可能会造成缓冲区溢出。|	API是安全的，不会造成缓冲区溢出。|
+| 修改字符串长度 N 次必然需要执行 N次内存重分配。|	修改字符串长度 N 次最多需要执行 N次内存重分配。|
+| 只能保存文本数据。| 可以保存文本或者二进制数据。|
+|可以使用所有 \<string.h>库中的函数。|	可以使用一部分 \<string.h>库中的函数。|
+
 ## redis 链表 - adlist
 
 ```c
@@ -245,7 +255,9 @@ typedef struct dictIterator {
 hash = dict->type->hashFunction(key);
 //使用哈希表的 sizemask 属性和哈希值，计算出索引值
 //根据不同场景，ht[x] 可能是 ht[0] 或 ht[1]
-index = hash & dict->ht[x]sizemask;
+index = hash & dict->ht[x].sizemask;
+//取值时
+return dict->ht[x]->table[index]
 ```
 
 当字典被用作数据库的底层实现，或者哈希键的底层实现时，Redis使用 MurmurHash2算法来计算键的哈希值，这种算法的有点在于，即使输入的键是有规律的，算法仍能给出一个很好的随机分布，并且算法的计算速度也非常快。算法参考 https://github.com/aappleby/smhasher
@@ -312,12 +324,131 @@ unsigned int dictGenHashFunction(const void *key, int len) {
 
 ### rehash
 
+#### 执行流程
+
 随着操作的执行，哈希表保存的键值对会逐渐的增多或者减少，这种情况下，需要对哈希表的大小进行相应的扩展或收缩，让哈希表的负载因子维持在一个合理的范围内。
 
 rehash 的操作步骤如下：
 
 1. 为字典 ht[1]的哈希表分配空间，空间大小取决于要执行的操作，以及 ht[0]当前包含的键值对数量，即 ht[0].used的值
 	- 如果是扩展操作，ht[1]的大小为第一个大于等于 ht[0].used*2 的 pow(2,n) (2的 n次方)
-	- 如果是收缩操作，ht[1]的大小为第一个大于等于 ht[0].used*2 的 pow(2,n) (2的 n次方)
-2. 
+	- 如果是收缩操作，ht[1]的大小为第一个大于等于 ht[0].used 的 pow(2,n) (2的 n次方)
+2. 将ht[0]中的所有键值 rehash 到 ht[1]上：rehash指的是重新计算键的哈希值和索引值，然后将键值对放置到 ht[1]哈希表指定的位置上
+3. 当 ht[0] -> ht[1]操作完成后，free(ht[0]), mv ht[1] -> ht[0], new(ht[1])
+
+```
+/* Performs N steps of incremental rehashing. Returns 1 if there are still
+ * keys to move from the old to the new hash table, otherwise 0 is returned.
+ *
+ * 执行 N 步渐进式 rehash 。
+ *
+ * 返回 1 表示仍有键需要从 0 号哈希表移动到 1 号哈希表，
+ * 返回 0 则表示所有键都已经迁移完毕。
+ *
+ * Note that a rehashing step consists in moving a bucket (that may have more
+ * than one key as we use chaining) from the old to the new hash table.
+ *
+ * 注意，每步 rehash 都是以一个哈希表索引（桶）作为单位的，
+ * 一个桶里可能会有多个节点，
+ * 被 rehash 的桶里的所有节点都会被移动到新哈希表。
+ *
+ * T = O(N)
+ */
+int dictRehash(dict *d, int n) {
+
+    // 只可以在 rehash 进行中时执行
+    if (!dictIsRehashing(d)) return 0;
+
+    // 进行 N 步迁移
+    // T = O(N)
+    while(n--) {
+        dictEntry *de, *nextde;
+
+        /* Check if we already rehashed the whole table... */
+        // 如果 0 号哈希表为空，那么表示 rehash 执行完毕
+        // T = O(1)
+        if (d->ht[0].used == 0) {
+            // 释放 0 号哈希表
+            zfree(d->ht[0].table);
+            // 将原来的 1 号哈希表设置为新的 0 号哈希表
+            d->ht[0] = d->ht[1];
+            // 重置旧的 1 号哈希表
+            _dictReset(&d->ht[1]);
+            // 关闭 rehash 标识
+            d->rehashidx = -1;
+            // 返回 0 ，向调用者表示 rehash 已经完成
+            return 0;
+        }
+
+        /* Note that rehashidx can't overflow as we are sure there are more
+         * elements because ht[0].used != 0 */
+        // 确保 rehashidx 没有越界
+        assert(d->ht[0].size > (unsigned)d->rehashidx);
+
+        // 略过数组中为空的索引，找到下一个非空索引
+        while(d->ht[0].table[d->rehashidx] == NULL) d->rehashidx++;
+
+        // 指向该索引的链表表头节点
+        de = d->ht[0].table[d->rehashidx];
+        /* Move all the keys in this bucket from the old to the new hash HT */
+        // 将链表中的所有节点迁移到新哈希表
+        // T = O(1)
+        while(de) {
+            unsigned int h;
+
+            // 保存下个节点的指针
+            nextde = de->next;
+
+            /* Get the index in the new hash table */
+            // 计算新哈希表的哈希值，以及节点插入的索引位置
+            h = dictHashKey(d, de->key) & d->ht[1].sizemask;
+
+            // 插入节点到新哈希表
+            de->next = d->ht[1].table[h];
+            d->ht[1].table[h] = de;
+
+            // 更新计数器
+            d->ht[0].used--;
+            d->ht[1].used++;
+
+            // 继续处理下个节点
+            de = nextde;
+        }
+        // 将刚迁移完的哈希表索引的指针设为空
+        d->ht[0].table[d->rehashidx] = NULL;
+        // 更新 rehash 索引
+        d->rehashidx++;
+    }
+
+    return 1;
+}
+```
+
+#### 触发条件
+
+```
+//负载因子 = 哈希表已保存节点数/哈希表大小
+laod_factor = ht[0].used / ht[0].size
+```
+
+满足下面任意一个条件，触发哈希表的扩展操作
+
+1. 服务器目前没有在执行 BGSAVE 命令或 BGREWRITEAOF 命令，且哈希表的负载因子大于等于1
+2. 服务器目前在执行 BGSAVE 命令或 BGREWRITEAOF 命令，且哈希表的负载因子大于等于5
+
+根据 BGSAVE 命令或 BGREWRITEAOF 命令是否正在执行， 服务器执行扩展操作所需的负载因子并不相同， 这是因为在执行 BGSAVE 命令或 BGREWRITEAOF 命令的过程中， Redis 需要创建当前服务器进程的子进程， 而大多数操作系统都采用写时复制（copy-on-write）技术来优化子进程的使用效率， 所以在子进程存在期间， 服务器会提高执行扩展操作所需的负载因子， 从而尽可能地避免在子进程存在期间进行哈希表扩展操作， 这可以避免不必要的内存写入操作， 最大限度地节约内存。
+
+负载因子小于0.1时，程序自动对哈希表进行收紧操作。
+
+### 渐进式 rehash
+
+以下是哈希表渐进式 rehash 的详细步骤：
+
+1. 为 ht[1] 分配空间， 让字典同时持有 ht[0] 和 ht[1] 两个哈希表。
+2. 在字典中维持一个索引计数器变量 rehashidx ， 并将它的值设置为 0 ， 表示 rehash 工作正式开始。
+3. 在 rehash 进行期间， 每次对字典执行添加、删除、查找或者更新操作时， 程序除了执行指定的操作以外， 还会顺带将 ht[0] 哈希表在 rehashidx 索引上的所有键值对 rehash 到 ht[1] ， 当 rehash 工作完成之后， 程序将 rehashidx 属性的值增一。
+4. 随着字典操作的不断执行， 最终在某个时间点上， ht[0] 的所有键值对都会被 rehash 至 ht[1] ， 这时程序将 rehashidx 属性的值设为 -1 ， 表示 rehash 操作已完成。
+
+渐进式 rehash 的好处在于它采取分而治之的方式， 将 rehash 键值对所需的计算工作均滩到对字典的每个添加、删除、查找和更新操作上， 从而避免了集中式 rehash 而带来的庞大计算量。
+
 
