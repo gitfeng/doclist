@@ -451,4 +451,86 @@ laod_factor = ht[0].used / ht[0].size
 
 渐进式 rehash 的好处在于它采取分而治之的方式， 将 rehash 键值对所需的计算工作均滩到对字典的每个添加、删除、查找和更新操作上， 从而避免了集中式 rehash 而带来的庞大计算量。
 
+## 跳跃表
+
+redis.h/zskiplistNode, redis.h/zskiplist, 
+
+单链表
+![](http://www.spongeliu.com/wp-content/uploads/2010/09/1.png)
+跳跃表示意图：
+![](http://www.spongeliu.com/wp-content/uploads/2010/09/2.png)
+
+图片备份：
+http://e.hiphotos.baidu.com/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=a4971c320ef3d7ca18fb37249376d56c/cdbf6c81800a19d8808bdf0931fa828ba61e4635.jpg
+
+
+
+```c
+/* ZSETs use a specialized version of Skiplists */
+/*
+ * 跳跃表节点
+ */
+typedef struct zskiplistNode {
+
+    // 成员对象
+    robj *obj;
+
+    // 分值
+    double score;
+
+    // 后退指针
+    struct zskiplistNode *backward;
+
+    // 层
+    struct zskiplistLevel {
+
+        // 前进指针
+        struct zskiplistNode *forward;
+
+        // 跨度
+        unsigned int span;
+
+    } level[];
+
+} zskiplistNode;
+
+/*
+ * 跳跃表
+ */
+typedef struct zskiplist {
+
+    // 表头节点和表尾节点
+    struct zskiplistNode *header, *tail;
+
+    // 表中节点的数量
+    unsigned long length;
+
+    // 表中层数最大的节点的层数
+    int level;
+
+} zskiplist;
+```
+
+## 有序集合
+
+redis.h/zset
+
+```c
+/*
+ * 有序集合
+ */
+typedef struct zset {
+
+    // 字典，键为成员，值为分值
+    // 用于支持 O(1) 复杂度的按成员取分值操作
+    dict *dict;
+
+    // 跳跃表，按分值排序成员
+    // 用于支持平均复杂度为 O(log N) 的按分值定位成员操作
+    // 以及范围操作
+    zskiplist *zsl;
+
+} zset;
+```
+
 
