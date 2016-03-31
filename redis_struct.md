@@ -8,7 +8,7 @@ description:  本章主要介绍 redis 的关键数据结构的设计与实现�
 ---
 
 ref: http://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html
-
+ref: http://redisbook.com/
 
 ## redis 字符串 - sds
 
