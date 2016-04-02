@@ -454,6 +454,7 @@ laod_factor = ht[0].used / ht[0].size
 ## 跳跃表
 
 redis.h/zskiplistNode, redis.h/zskiplist, 
+应用场景：有序集合键，集群节点中用作内部数据结构。
 
 单链表
 ![](http://www.spongeliu.com/wp-content/uploads/2010/09/1.png)
@@ -462,7 +463,6 @@ redis.h/zskiplistNode, redis.h/zskiplist,
 
 图片备份：
 http://e.hiphotos.baidu.com/baike/c0%3Dbaike80%2C5%2C5%2C80%2C26/sign=a4971c320ef3d7ca18fb37249376d56c/cdbf6c81800a19d8808bdf0931fa828ba61e4635.jpg
-
 
 
 ```c
@@ -510,6 +510,110 @@ typedef struct zskiplist {
 
 } zskiplist;
 ```
+
+生成节点 level 的函数
+
+```c
+/* Returns a random level for the new skiplist node we are going to create.
+ *
+ * 返回一个随机值，用作新跳跃表节点的层数。
+ *
+ * The return value of this function is between 1 and ZSKIPLIST_MAXLEVEL
+ * (both inclusive), with a powerlaw-alike distribution where higher
+ * levels are less likely to be returned. 
+ *
+ * 返回值介乎 1 和 ZSKIPLIST_MAXLEVEL 之间（包含 ZSKIPLIST_MAXLEVEL），
+ * 根据随机算法所使用的幂次定律，越大的值生成的几率越小。
+ *
+ * T = O(N)
+ *
+ * redis.h:303:#define ZSKIPLIST_MAXLEVEL 32
+ * redis.h:304:#define ZSKIPLIST_P 0.25
+ */
+int zslRandomLevel(void) {
+    int level = 1;
+
+    while ((random()&0xFFFF) < (ZSKIPLIST_P * 0xFFFF))
+        level += 1;
+
+    return (level<ZSKIPLIST_MAXLEVEL) ? level : ZSKIPLIST_MAXLEVEL;
+}
+```
+
+## 整数集合
+
+集合键的底层实现之一，当集合键只包含整数值元素，且元素个数不多时，Redis 会使用整数集合作为集合键的底层实现。
+
+```c
+/*
+ * intset 的编码方式
+ */
+#define INTSET_ENC_INT16 (sizeof(int16_t))
+#define INTSET_ENC_INT32 (sizeof(int32_t))
+#define INTSET_ENC_INT64 (sizeof(int64_t))
+
+typedef struct intset {
+
+    // 编码方式
+    uint32_t encoding;
+
+    // 集合包含的元素数量
+    uint32_t length;
+
+    // 保存元素的数组
+    int8_t contents[];
+
+} intset;
+```
+
+## 压缩列表
+
+```c
+ /** 
+ * 以下是 ziplist 的一般布局：
+ *
+ * <zlbytes><zltail><zllen><entry><entry><zlend>
+ */
+```
+
+压缩列表各个组成部分的详细说明
+
+| 属性 | 类型 | 长度 | 用途 |
+|-----|-----|------|-----|
+|zlbytes | uint32_t | 4字节 | 记录整个压缩列表占用的内存字节数：在对压缩列表进行内存重分配， 或者计算 zlend 的位置时使用。|
+|zltail | uint32_t | 4字节 | 记录压缩列表表尾节点距离压缩列表的起始地址有多少字节： 通过这个偏移量，程序无须遍历整个压缩列表就可以确定表尾节点的地址。|
+|zllen | uint16_t | 2字节 | 记录了压缩列表包含的节点数量： 当这个属性的值小于 UINT16_MAX （65535）时， 这个属性的值就是压缩列表包含节点的数量； 当这个值等于 UINT16_MAX 时， 节点的真实数量需要遍历整个压缩列表才能计算得出。|
+|entryX | 列表节点 | 不定 | 压缩列表包含的各个节点，节点的长度由节点保存的内容决定。|
+|zlend | uint8_t | 1字节 | 特殊值 0xFF （十进制 255 ），用于标记压缩列表的末端。|
+
+ 
+ ```c
+ /*
+ * 保存 ziplist 节点信息的结构
+ */
+typedef struct zlentry {
+
+    // prevrawlen ：前置节点的长度
+    // prevrawlensize ：编码 prevrawlen 所需的字节大小
+    unsigned int prevrawlensize, prevrawlen;
+
+    // len ：当前节点值的长度
+    // lensize ：编码 len 所需的字节大小
+    unsigned int lensize, len;
+
+    // 当前节点 header 的大小
+    // 等于 prevrawlensize + lensize
+    unsigned int headersize;
+
+    // 当前节点值所使用的编码类型
+    unsigned char encoding;
+
+    // 指向当前节点的指针
+    unsigned char *p;
+
+} zlentry; 
+```
+
 
 ## 有序集合
 
