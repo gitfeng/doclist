@@ -587,7 +587,7 @@ typedef struct intset {
 |zlend | uint8_t | 1字节 | 特殊值 0xFF （十进制 255 ），用于标记压缩列表的末端。|
 
  
- ```c
+```c
  /*
  * 保存 ziplist 节点信息的结构
  */
@@ -614,7 +614,6 @@ typedef struct zlentry {
 } zlentry; 
 ```
 
-
 ## 有序集合
 
 redis.h/zset
@@ -637,4 +636,93 @@ typedef struct zset {
 } zset;
 ```
 
+## 对象
+
+```c
+typedef struct redisObject {
+
+    // 类型
+    unsigned type:4;
+
+    // 编码
+    unsigned encoding:4;
+
+    // 指向底层实现数据结构的指针
+    void *ptr;
+
+    // ...
+
+} robj;
+```
+
+
+| 对象 | 对象 type 属性的值 | TYPE 命令的输出|
+|------|------------------|--------------|
+|字符串对象 | REDIS_STRING | "string"|
+|列表对象 | REDIS_LIST | "list"|
+|哈希对象 | REDIS_HASH | "hash"|
+|集合对象 | REDIS_SET | "set"|
+|有序集合对象 | REDIS_ZSET | "zset"|
+
+对象的编码
+
+| 对象所使用的底层数据结构| 编码常量 |	OBJECT ENCODING 命令输出 |
+|---------------------| --------| -----|
+| 整数	 | REDIS_ENCODING_INT | "int" |
+| embstr 编码的简单动态字符串（SDS） |REDIS_ENCODING_EMBSTR | "embstr"|
+| 简单动态字符串 | REDIS_ENCODING_RAW | "raw" |
+| 字典 | REDIS_ENCODING_HT | "hashtable" |
+|双端链表 | REDIS_ENCODING_LINKEDLIST | "linkedlist"|
+| 压缩列表 | REDIS_ENCODING_ZIPLIST | "ziplist"|
+| 整数集合 | REDIS_ENCODING_INTSET | "intset" |
+| 跳跃表和字典 | REDIS_ENCODING_SKIPLIST | "skiplist" |
+
+不同类型和编码的对象
+
+| 类型 | 编码 | 对象 |
+|------|-----|-----|
+| REDIS_STRING	 | REDIS_ENCODING_INT | 使用整数值实现的字符串对象。 |
+| REDIS_STRING	 | REDIS_ENCODING_EMBSTR | 使用 embstr 编码的简单动态字符串实现的字符串对象。 |
+| REDIS_STRING	 | REDIS_ENCODING_RAW | 使用简单动态字符串实现的字符串对象。 |
+| REDIS_LIST | REDIS_ENCODING_ZIPLIST | 使用压缩列表实现的列表对象。 |
+| REDIS_LIST | REDIS_ENCODING_LINKEDLIST | 使用双端链表实现的列表对象。 |
+| REDIS_HASH | REDIS_ENCODING_ZIPLIST | 使用压缩列表实现的哈希对象。 |
+| REDIS_HASH | REDIS_ENCODING_HT | 使用字典实现的哈希对象。 |
+| REDIS_SET	 | REDIS_ENCODING_INTSET | 使用整数集合实现的集合对象。 |
+| REDIS_SET | REDIS_ENCODING_HT | 使用字典实现的集合对象。 |
+| REDIS_ZSET | REDIS_ENCODING_ZIPLIST | 使用压缩列表实现的有序集合对象。 |
+| REDIS_ZSET | REDIS_ENCODING_SKIPLIST | 使用跳跃表和字典实现的有序集合对象。 |
+
+不同编码的使用场景：
+
+- 因为压缩列表比双端链表更节约内存，并且在元素数量较少时， 在内存中以连续块方式保存的压缩列表比起双端链表可以更快被载入到缓存中；
+- 随着列表对象包含的元素越来越多，使用压缩列表来保存元素的优势逐渐消失时，对象就会将底层实现从压缩列表转向功能更强、也更适合保存大量元素的双端链表上面；
+
+### 列表对象编码转换
+
+列表类结构的实现：压缩列表和双端列表的选择；
+当列表对象可以同时满足以下两个条件时，列表对象使用 ziplist 编码：
+
+- 列表对象保存的所有字符串元素的长度都小于 64 字节；
+- 列表对象保存的元素数量小于 512 个；
+
+不能满足这两个条件的列表对象需要使用 linkedlist 编码。
+
+### 哈希对象编码转换
+
+当哈希对象可以同时满足以下两个条件时， 哈希对象使用 ziplist 编码：
+
+- 哈希对象保存的所有键值对的键和值的字符串长度都小于 64 字节；
+- 哈希对象保存的键值对数量小于 512 个；
+
+不能满足这两个条件的哈希对象需要使用 hashtable 编码。
+
+### 集合对象编码转换
+
+当集合对象可以同时满足以下两个条件时， 对象使用 intset 编码：
+
+- 集合对象保存的所有元素都是整数值；
+- 集合对象保存的元素数量不超过 512 个；
+
+不能满足这两个条件的集合对象需要使用 hashtable 编码。
 
